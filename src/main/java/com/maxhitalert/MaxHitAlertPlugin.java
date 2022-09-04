@@ -46,8 +46,8 @@ public class MaxHitAlertPlugin extends Plugin
 		if(hitsplatApplied.getHitsplat().isMine()){
 			if(hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_MAX_ME_ORANGE ||
 					hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_ME_ORANGE ||
-					hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_MAX_ME ||
-					hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_ME
+					hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_MAX_ME
+					
 
 			){
 				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Hit max detected!", null);
