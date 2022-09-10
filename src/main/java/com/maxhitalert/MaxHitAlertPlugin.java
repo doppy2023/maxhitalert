@@ -1,9 +1,7 @@
 package com.maxhitalert;
 import com.google.inject.Provides;
-import java.io.OutputStream;
-import java.net.URL;
+import java.io.IOException;
 import java.util.Objects;
-import javax.net.ssl.HttpsURLConnection;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
@@ -14,6 +12,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.config.ConfigManager;
+import okhttp3.*;
 
 @Slf4j
 @PluginDescriptor(
@@ -25,19 +24,10 @@ public class MaxHitAlertPlugin extends Plugin
 	private Client client;
 
 	@Inject
+	private OkHttpClient okHttpClient;
+
+	@Inject
 	private MaxHitAlertConfig config;
-
-	@Override
-	protected void startUp() throws Exception
-	{
-		log.info("MaxHitAlert started!");
-	}
-
-	@Override
-	protected void shutDown() throws Exception
-	{
-		log.info("MaxHitAlert stopped!");
-	}
 
 	@Subscribe
 	public void onHitsplatApplied(HitsplatApplied hitsplatApplied)
@@ -46,8 +36,7 @@ public class MaxHitAlertPlugin extends Plugin
 		if(hitsplatApplied.getHitsplat().isMine()){
 			if(hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_MAX_ME_ORANGE ||
 					hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_ME_ORANGE ||
-					hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_MAX_ME ||
-					hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_ME
+					hitsplatApplied.getHitsplat().getHitsplatType() == HitsplatID.DAMAGE_MAX_ME
 
 			){
 				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Hit max detected!", null);
@@ -59,6 +48,7 @@ public class MaxHitAlertPlugin extends Plugin
 				}
 				else{
 
+
 					String title = "Got a Max Hit!";
 					String message = "Max Hit!";
 					///////////////////////////////////////////////
@@ -68,21 +58,27 @@ public class MaxHitAlertPlugin extends Plugin
 							+ "\"description\": \""+ message +"\","
 							+ "\"color\": 15258703"
 							+ "}]}";
+
+					OkHttpClient client = new OkHttpClient();
+
+					RequestBody formBody = new MultipartBody.Builder()
+							.setType(MultipartBody.FORM)
+							.addFormDataPart("payload_json", jsonBrut)
+							.build();
+					Request request = new Request.Builder()
+							.url(tokenWebhook)
+							.post(formBody)
+							.addHeader("Content-type", "application/json")
+							.build();
+
 					try {
-						URL url = new URL(tokenWebhook);
-						HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-						con.addRequestProperty("Content-Type", "application/json");
-						con.addRequestProperty("User-Agent", "Java-DiscordWebhook");
-						con.setDoOutput(true);
-						con.setRequestMethod("POST");
-						OutputStream stream = con.getOutputStream();
-						stream.write(jsonBrut.getBytes());
-						stream.flush();
-						stream.close();
-						con.getInputStream().close();
-						con.disconnect();
-					} catch (Exception e) {
-						client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Tried sending discord webhook but got error, please change webhook url", null);
+						Response response = client.newCall(request).execute();
+
+						// Do something with the response.
+					} catch (IOException e) {
+
+						e.printStackTrace();
+
 					}
 
 				}
