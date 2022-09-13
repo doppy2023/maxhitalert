@@ -12,7 +12,15 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.config.ConfigManager;
-import okhttp3.*;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 @Slf4j
 @PluginDescriptor(
@@ -59,27 +67,31 @@ public class MaxHitAlertPlugin extends Plugin
 							+ "\"color\": 15258703"
 							+ "}]}";
 
-					OkHttpClient client = new OkHttpClient();
-
-					RequestBody formBody = new MultipartBody.Builder()
+					MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder()
 							.setType(MultipartBody.FORM)
-							.addFormDataPart("payload_json", jsonBrut)
-							.build();
+							.addFormDataPart("payload_json", jsonBrut);
+
+					MultipartBody requestBody = requestBodyBuilder.build();
+
 					Request request = new Request.Builder()
 							.url(tokenWebhook)
-							.post(formBody)
-							.addHeader("Content-type", "application/json")
+							.post(requestBody)
 							.build();
 
-					try {
-						Response response = client.newCall(request).execute();
+					okHttpClient.newCall(request).enqueue(new Callback()
+					{
+						@Override
+						public void onFailure(Call call, IOException e)
+						{
+							client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Tried sending discord notification but got an error", null);
+						}
 
-						// Do something with the response.
-					} catch (IOException e) {
-
-						e.printStackTrace();
-
-					}
+						@Override
+						public void onResponse(Call call, Response response) throws IOException
+						{
+							response.close();
+						}
+					});
 
 				}
 
