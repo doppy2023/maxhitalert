@@ -11,6 +11,7 @@ import net.runelite.api.HitsplatID;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -36,6 +37,9 @@ public class MaxHitAlertPlugin extends Plugin
 
 	@Inject
 	private MaxHitAlertConfig config;
+	
+	@Inject
+	private ClientThread clientThread;
 
 	@Subscribe
 	public void onHitsplatApplied(HitsplatApplied hitsplatApplied)
@@ -83,7 +87,10 @@ public class MaxHitAlertPlugin extends Plugin
 						@Override
 						public void onFailure(Call call, IOException e)
 						{
-							client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Tried sending discord notification but got an error", null);
+							
+							clientThread.invokeLater(() -> client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Tried sending discord notification but got an error", null));
+							
+							
 						}
 
 						@Override
